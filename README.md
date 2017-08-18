@@ -17,6 +17,9 @@ Set the location of your timelog file:
 
 The default location is `$HOME/.timelog.ldg`.
 
+If you clone the entire repository instead then you'll also get a zsh
+completion function.
+
 ## Usage ##
 
 Usage: `t <action>`
@@ -27,7 +30,9 @@ Usage: `t <action>`
 - `t out` - clock out of project
 - `t sw,switch` - switch projects
 - `t bal` - show balance
-- `t hours` - show balance for today
+- `t hours,today` - show balance for today
+- `t week` - show balance beginning most recent Monday
+- `t month` - show balance beginning 1st of current month
 - `t edit` - edit timelog file
 - `t cur` - show currently open project
 - `t last` - show last closed project
