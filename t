@@ -54,7 +54,9 @@ actions:
      out - clock out of project
      sw,switch - switch projects
      bal - show balance
-     hours - show balance for today
+     hours,today - show balance for today
+     week - show balance for this week
+     month - show balance for this month
      edit - edit timelog file
      cur - show currently open project
      last - show last closed project
@@ -78,6 +80,36 @@ __t_extract_project() {
       }'
 }
 
+__t_timeof_arbitrary() {
+  if date --version 2>/dev/null | grep -qs 'GNU coreutils'
+  then
+    date -d "$*" +%Y-%m-%d
+    return 0
+  fi
+  if gdate --version 2>/dev/null | grep -qs 'GNU coreutils'
+  then
+    gdate -d "$*" +%Y-%m-%d
+    return 0
+  fi
+  return 1
+}
+
+__t_timeof_last_monday() {
+  __t_timeof_arbitrary 'last monday' && return
+
+  if ! perl -MTime::Piece -e 1 2>/dev/null
+  then  # is part of perl stdlib since 5.8
+    echo >&2 "unable to perform date calc for [$*], sorry"
+    exit 1
+  fi
+
+  perl -MTime::Piece -MTime::Seconds -le '
+    $a=Time::Piece->new->day_of_week - 1;
+    $a+=7 if $a < 0;
+    print((Time::Piece->new - $a*ONE_DAY)->strftime("%Y-%m-%d"))'
+  return 0
+}
+
 action=$1; shift
 [ "$TIMELOG" ] && timelog="$TIMELOG" || timelog="${HOME}/.timelog.ldg"
 
@@ -86,7 +118,9 @@ case "${action}" in
   out)  _t_out "$@";;
   sw)   _t_sw "$@";;
   bal) _t_ledger bal "$@";;
-  hours) _t_ledger bal -p "since today" "$@";;
+  hours|today) _t_ledger bal -p "since today" "$@";;
+  week) _t_ledger bal -b "$(__t_timeof_last_monday)" "$@";;
+  month) _t_ledger bal -b "$(date +%Y-%m)-01" "$@";;
   switch)   _t_sw "$@";;
   edit) _t_do $EDITOR "$@";;
   cur)  _t_cur "$@";;
