@@ -12,7 +12,7 @@ _t_ledger() {
 
 # do something in unix with the timelog
 _t_do() {
-    action=$1; shift
+    action="$1"; shift || _t_usage 1
     ${action} "$@" ${timelog}
 }
 
@@ -46,10 +46,14 @@ _t_last() {
 
 # Show usage
 _t_usage() {
-  # TODO
-  cat << EOF
+  ev="${1:-1}"
+  [ $ev = 0 ] || exec >&2
+  cat <<'EOF'
 Usage: t action
 actions:
+EOF
+  US="$(printf '\037')"
+  cat <<'EOF' | sed "s/-/$US-/" | column -t -s "$US"
      in - clock into project or last project
      out - clock out of project
      sw,switch - switch projects
@@ -65,6 +69,7 @@ actions:
      less - show timelog in pager
      timelog - show timelog file
 EOF
+  exit "$ev"
 }
 
 #
@@ -110,7 +115,8 @@ __t_timeof_last_monday() {
   return 0
 }
 
-action=$1; shift
+[ $# -ge 1 ] || _t_usage 1
+action="$1"; shift
 [ "$TIMELOG" ] && timelog="$TIMELOG" || timelog="${HOME}/.timelog.ldg"
 
 case "${action}" in
@@ -130,8 +136,8 @@ case "${action}" in
   less)  _t_do less;;
   timelog) _t_timelog "$@";;
 
-  h)    _t_usage;;
-  *)    _t_usage;;
+  h)    _t_usage 0;;
+  *)    _t_usage 1;;
 esac
 
 exit 0
